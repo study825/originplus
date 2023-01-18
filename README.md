@@ -2,7 +2,7 @@ originplus 游戏服务器引擎简介
 ==================
 
 
-originplus 是一个由 Go 语言（golang）编写的分布式开源游戏服务器引擎。origin适用于各类游戏服务器的开发，包括 H5（HTML5）游戏服务器。在duanhf2012/origin框架基础上，优化了很多功能，更适合云原生时代使用。
+originplus 是一个由 Go 语言（golang）编写的分布式开源游戏服务器引擎。originplus适用于各类游戏服务器的开发，包括 H5（HTML5）游戏服务器。在duanhf2012/origin框架基础上，优化了很多功能，更适合云原生时代使用。
 
 originplus 解决的问题：
 * originplus总体设计如go语言设计一样，总是尽可能的提供简洁和易用的模式，快速开发。
