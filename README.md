@@ -23,7 +23,7 @@ go get -v -u  github.com/study825/originplus
 package main
 
 import (
-	"github.com/duanhf2012/origin/node"
+	"github.com/study825/originplus/node"
 )
 
 func main() {

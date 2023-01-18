@@ -3,7 +3,7 @@ package rpc
 import (
 	"errors"
 	"fmt"
-	"github.com/duanhf2012/origin/log"
+	"github.com/study825/originplus/log"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -85,7 +85,7 @@ type IRpcHandler interface {
 	GetRpcHandler() IRpcHandler
 	HandlerRpcRequest(request *RpcRequest)
 	HandlerRpcResponseCB(call *Call)
-	CallMethod(client *Client,ServiceMethod string, param interface{},callBack reflect.Value, reply interface{}) error
+	CallMethod(client *Client, ServiceMethod string, param interface{}, callBack reflect.Value, reply interface{}) error
 	AsyncCall(serviceMethod string, args interface{}, callback interface{}) error
 	Call(serviceMethod string, args interface{}, reply interface{}) error
 	Go(serviceMethod string, args interface{}) error
@@ -299,7 +299,7 @@ func (handler *RpcHandler) HandlerRpcRequest(request *RpcRequest) {
 	}
 }
 
-func (handler *RpcHandler) CallMethod(client *Client,ServiceMethod string, param interface{},callBack reflect.Value, reply interface{}) error {
+func (handler *RpcHandler) CallMethod(client *Client, ServiceMethod string, param interface{}, callBack reflect.Value, reply interface{}) error {
 	var err error
 	v, ok := handler.mapFunctions[ServiceMethod]
 	if ok == false {
@@ -324,31 +324,31 @@ func (handler *RpcHandler) CallMethod(client *Client,ServiceMethod string, param
 		//有返回值时
 		if reply != nil {
 			//如果是Call同步调用
-			hander :=func(Returns interface{}, Err RpcError) {
+			hander := func(Returns interface{}, Err RpcError) {
 				rpcCall := client.RemovePending(callSeq)
 				if rpcCall == nil {
-					log.SError("cannot find call seq ",callSeq)
+					log.SError("cannot find call seq ", callSeq)
 					return
 				}
 
 				//解析数据
-				if len(Err)!=0 {
+				if len(Err) != 0 {
 					rpcCall.Err = Err
-				}else if Returns != nil {
+				} else if Returns != nil {
 					_, processor := GetProcessorType(Returns)
 					var bytes []byte
-					bytes,rpcCall.Err = processor.Marshal(Returns)
+					bytes, rpcCall.Err = processor.Marshal(Returns)
 					if rpcCall.Err == nil {
-						rpcCall.Err = processor.Unmarshal(bytes,reply)
+						rpcCall.Err = processor.Unmarshal(bytes, reply)
 					}
 				}
 
 				//如果找不到，说明已经超时
 				rpcCall.Reply = reply
-				rpcCall.done<-rpcCall
+				rpcCall.done <- rpcCall
 			}
-			paramList = append(paramList,  reflect.ValueOf(hander))
-		}else{//无返回值时,是一个requestHandlerNull空回调
+			paramList = append(paramList, reflect.ValueOf(hander))
+		} else { //无返回值时,是一个requestHandlerNull空回调
 			paramList = append(paramList, callBack)
 		}
 		paramList = append(paramList, reflect.ValueOf(param))
@@ -358,11 +358,11 @@ func (handler *RpcHandler) CallMethod(client *Client,ServiceMethod string, param
 
 		//判断返回值是否错误，有错误时则回调
 		errInter := returnValues[0].Interface()
-		if errInter != nil && callBack!=requestHandlerNull{
+		if errInter != nil && callBack != requestHandlerNull {
 			err = errInter.(error)
 			callBack.Call([]reflect.Value{reflect.ValueOf(reply), reflect.ValueOf(err)})
 		}
-	}else{
+	} else {
 		paramList = append(paramList, reflect.ValueOf(handler.GetRpcHandler())) //接受者
 		paramList = append(paramList, reflect.ValueOf(param))
 
@@ -371,7 +371,7 @@ func (handler *RpcHandler) CallMethod(client *Client,ServiceMethod string, param
 			//不带返回值参数的RPC函数
 			if reply == nil {
 				paramList = append(paramList, reflect.New(v.outParamValue.Type().Elem()))
-			}else{
+			} else {
 				//带返回值参数的RPC函数
 				paramList = append(paramList, reflect.ValueOf(reply)) //输出参数
 			}
@@ -388,14 +388,14 @@ func (handler *RpcHandler) CallMethod(client *Client,ServiceMethod string, param
 				valErr = reflect.ValueOf(err)
 			}
 
-			callBack.Call([]reflect.Value{reflect.ValueOf(reply),valErr })
+			callBack.Call([]reflect.Value{reflect.ValueOf(reply), valErr})
 		}
 	}
 
 	rpcCall := client.FindPending(callSeq)
-	if rpcCall!=nil  {
-		err =  rpcCall.Done().Err
-		if rpcCall.callback!= nil {
+	if rpcCall != nil {
+		err = rpcCall.Done().Err
+		if rpcCall.callback != nil {
 			valErr := nilError
 			if rpcCall.Err != nil {
 				valErr = reflect.ValueOf(rpcCall.Err)
@@ -443,7 +443,7 @@ func (handler *RpcHandler) goRpc(processor IRpcProcessor, bCast bool, nodeId int
 			serviceName := serviceMethod[:findIndex]
 			if serviceName == handler.rpcHandler.GetName() { //自己服务调用
 				//调用自己rpcHandler处理器
-				return pLocalRpcServer.myselfRpcHandlerGo(pClientList[i],serviceName, serviceMethod, args, requestHandlerNull,nil)
+				return pLocalRpcServer.myselfRpcHandlerGo(pClientList[i], serviceName, serviceMethod, args, requestHandlerNull, nil)
 			}
 			//其他的rpcHandler的处理器
 			pCall := pLocalRpcServer.selfNodeRpcHandlerGo(processor, pClientList[i], true, serviceName, 0, serviceMethod, args, nil, nil)
@@ -497,7 +497,7 @@ func (handler *RpcHandler) callRpc(nodeId int, serviceMethod string, args interf
 		serviceName := serviceMethod[:findIndex]
 		if serviceName == handler.rpcHandler.GetName() { //自己服务调用
 			//调用自己rpcHandler处理器
-			return pLocalRpcServer.myselfRpcHandlerGo(pClient,serviceName, serviceMethod, args,requestHandlerNull, reply)
+			return pLocalRpcServer.myselfRpcHandlerGo(pClient, serviceName, serviceMethod, args, requestHandlerNull, reply)
 		}
 		//其他的rpcHandler的处理器
 		pCall := pLocalRpcServer.selfNodeRpcHandlerGo(nil, pClient, false, serviceName, 0, serviceMethod, args, reply, nil)
@@ -576,7 +576,7 @@ func (handler *RpcHandler) asyncCallRpc(nodeId int, serviceMethod string, args i
 		serviceName := serviceMethod[:findIndex]
 		//调用自己rpcHandler处理器
 		if serviceName == handler.rpcHandler.GetName() { //自己服务调用
-			return pLocalRpcServer.myselfRpcHandlerGo(pClient,serviceName, serviceMethod, args,fVal ,reply)
+			return pLocalRpcServer.myselfRpcHandlerGo(pClient, serviceName, serviceMethod, args, fVal, reply)
 		}
 
 		//其他的rpcHandler的处理器
@@ -653,7 +653,7 @@ func (handler *RpcHandler) RawGoNode(rpcProcessorType RpcProcessorType, nodeId i
 			pLocalRpcServer := handler.funcRpcServer()
 			//调用自己rpcHandler处理器
 			if serviceName == handler.rpcHandler.GetName() { //自己服务调用
-				err := pLocalRpcServer.myselfRpcHandlerGo(handler.pClientList[i],serviceName, serviceName, rawArgs.GetRawData(), requestHandlerNull,nil)
+				err := pLocalRpcServer.myselfRpcHandlerGo(handler.pClientList[i], serviceName, serviceName, rawArgs.GetRawData(), requestHandlerNull, nil)
 				//args.DoGc()
 				return err
 			}

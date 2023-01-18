@@ -1,7 +1,7 @@
 package messagequeueservice
 
 import (
-	"github.com/duanhf2012/origin/util/algorithms"
+	"github.com/study825/originplus/util/algorithms"
 	"sync"
 )
 
@@ -51,7 +51,7 @@ func (mq *MemoryQueue) findData(startPos int32, startIndex uint64, limit int32) 
 	} else {
 		findEndPos = int32(len(mq.topicQueue))
 	}
-	
+
 	if findStartPos >= findEndPos {
 		return nil, false
 	}
@@ -87,21 +87,21 @@ func (mq *MemoryQueue) FindData(startIndex uint64, limit int32, dataQueue []Topi
 		return nil, false
 	} else if mq.head < mq.tail {
 		// 队列没有折叠
-		datas,ret := mq.findData(mq.head + 1, startIndex, limit)
+		datas, ret := mq.findData(mq.head+1, startIndex, limit)
 		if ret {
 			dataQueue = append(dataQueue, datas...)
 		}
 		return dataQueue, ret
 	} else {
 		// 折叠先找后面的部分
-		datas,ret := mq.findData(mq.head+1, startIndex, limit)
+		datas, ret := mq.findData(mq.head+1, startIndex, limit)
 		if ret {
 			dataQueue = append(dataQueue, datas...)
 			return dataQueue, ret
 		}
 
 		// 后面没找到，从前面开始找
-		datas,ret = mq.findData(0, startIndex, limit)
+		datas, ret = mq.findData(0, startIndex, limit)
 		dataQueue = append(dataQueue, datas...)
 		return dataQueue, ret
 	}

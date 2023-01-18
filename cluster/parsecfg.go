@@ -2,9 +2,9 @@ package cluster
 
 import (
 	"fmt"
-	"github.com/duanhf2012/origin/log"
-	"github.com/duanhf2012/origin/rpc"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/study825/originplus/log"
+	"github.com/study825/originplus/rpc"
 	"os"
 	"path/filepath"
 	"strings"
@@ -117,7 +117,7 @@ func (cls *Cluster) readLocalService(localNodeId int) error {
 		return fmt.Errorf("Read dir %s is fail :%+v", clusterCfgPath, err)
 	}
 
-	var globalCfg  interface{}
+	var globalCfg interface{}
 	publicService := map[string]interface{}{}
 	nodeService := map[string]interface{}{}
 
@@ -127,12 +127,12 @@ func (cls *Cluster) readLocalService(localNodeId int) error {
 			continue
 		}
 
-		if filepath.Ext(f.Name())!= ".json" {
+		if filepath.Ext(f.Name()) != ".json" {
 			continue
 		}
 
 		filePath := strings.TrimRight(strings.TrimRight(clusterCfgPath, "/"), "\\") + "/" + f.Name()
-			currGlobalCfg, serviceConfig, mapNodeService, err := cls.readServiceConfig(filePath)
+		currGlobalCfg, serviceConfig, mapNodeService, err := cls.readServiceConfig(filePath)
 		if err != nil {
 			continue
 		}
@@ -140,7 +140,7 @@ func (cls *Cluster) readLocalService(localNodeId int) error {
 		if currGlobalCfg != nil {
 			//不允许重复的配置global配置
 			if globalCfg != nil {
-				return fmt.Errorf("[Global] does not allow repeated configuration in %s.",f.Name())
+				return fmt.Errorf("[Global] does not allow repeated configuration in %s.", f.Name())
 			}
 			globalCfg = currGlobalCfg
 		}
@@ -151,14 +151,14 @@ func (cls *Cluster) readLocalService(localNodeId int) error {
 				//取公共服务配置
 				pubCfg, ok := serviceConfig[s]
 				if ok == true {
-					if _,publicOk := publicService[s];publicOk == true {
-						return fmt.Errorf("public service [%s] does not allow repeated configuration in %s.",s,f.Name())
+					if _, publicOk := publicService[s]; publicOk == true {
+						return fmt.Errorf("public service [%s] does not allow repeated configuration in %s.", s, f.Name())
 					}
 					publicService[s] = pubCfg
 				}
 
 				//取指定结点配置的服务
-				nodeServiceCfg,ok := mapNodeService[localNodeId]
+				nodeServiceCfg, ok := mapNodeService[localNodeId]
 				if ok == false {
 					break
 				}
@@ -167,8 +167,8 @@ func (cls *Cluster) readLocalService(localNodeId int) error {
 					break
 				}
 
-				if _,nodeOK := nodeService[s];nodeOK == true {
-					return fmt.Errorf("NodeService NodeId[%d] Service[%s] does not allow repeated configuration in %s.",cls.localNodeInfo.NodeId,s,f.Name())
+				if _, nodeOK := nodeService[s]; nodeOK == true {
+					return fmt.Errorf("NodeService NodeId[%d] Service[%s] does not allow repeated configuration in %s.", cls.localNodeInfo.NodeId, s, f.Name())
 				}
 				nodeService[s] = nodeCfg
 				break
@@ -181,16 +181,16 @@ func (cls *Cluster) readLocalService(localNodeId int) error {
 		//先从NodeService中找
 		var serviceCfg interface{}
 		var ok bool
-		serviceCfg,ok = nodeService[s]
+		serviceCfg, ok = nodeService[s]
 		if ok == true {
-			cls.localServiceCfg[s] =serviceCfg
+			cls.localServiceCfg[s] = serviceCfg
 			continue
 		}
 
 		//如果找不到从PublicService中找
-		serviceCfg,ok = publicService[s]
+		serviceCfg, ok = publicService[s]
 		if ok == true {
-			cls.localServiceCfg[s] =serviceCfg
+			cls.localServiceCfg[s] = serviceCfg
 		}
 	}
 	cls.globalCfg = globalCfg

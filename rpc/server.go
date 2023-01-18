@@ -3,8 +3,8 @@ package rpc
 import (
 	"errors"
 	"fmt"
-	"github.com/duanhf2012/origin/log"
-	"github.com/duanhf2012/origin/network"
+	"github.com/study825/originplus/log"
+	"github.com/study825/originplus/network"
 	"math"
 	"net"
 	"reflect"
@@ -63,7 +63,7 @@ func (server *Server) Init(rpcHandleFinder RpcHandleFinder) {
 	server.rpcServer = &network.TCPServer{}
 }
 
-const Default_ReadWriteDeadline = 15*time.Second
+const Default_ReadWriteDeadline = 15 * time.Second
 
 func (server *Server) Start(listenAddr string, maxRpcParamLen uint32) {
 	splitAddr := strings.Split(listenAddr, ":")
@@ -238,7 +238,7 @@ func (server *Server) NewAgent(c *network.TCPConn) network.Agent {
 	return agent
 }
 
-func (server *Server) myselfRpcHandlerGo(client *Client,handlerName string, serviceMethod string, args interface{},callBack reflect.Value, reply interface{}) error {
+func (server *Server) myselfRpcHandlerGo(client *Client, handlerName string, serviceMethod string, args interface{}, callBack reflect.Value, reply interface{}) error {
 	rpcHandler := server.rpcHandleFinder.FindRpcHandler(handlerName)
 	if rpcHandler == nil {
 		err := errors.New("service method " + serviceMethod + " not config!")
@@ -246,9 +246,7 @@ func (server *Server) myselfRpcHandlerGo(client *Client,handlerName string, serv
 		return err
 	}
 
-
-
-	return rpcHandler.CallMethod(client,serviceMethod, args,callBack, reply)
+	return rpcHandler.CallMethod(client, serviceMethod, args, callBack, reply)
 }
 
 func (server *Server) selfNodeRpcHandlerGo(processor IRpcProcessor, client *Client, noReply bool, handlerName string, rpcMethodId uint32, serviceMethod string, args interface{}, reply interface{}, rawArgs []byte) *Call {
@@ -267,7 +265,6 @@ func (server *Server) selfNodeRpcHandlerGo(processor IRpcProcessor, client *Clie
 
 	var iParam interface{}
 
-
 	if processor == nil {
 		_, processor = GetProcessorType(args)
 	}
@@ -277,14 +274,14 @@ func (server *Server) selfNodeRpcHandlerGo(processor IRpcProcessor, client *Clie
 		//args
 		//复制输入参数
 		iParam = inParamValue.Interface()
-		bytes,err := processor.Marshal(args)
+		bytes, err := processor.Marshal(args)
 		if err == nil {
-			err = processor.Unmarshal(bytes,iParam)
+			err = processor.Unmarshal(bytes, iParam)
 		}
 
 		if err != nil {
 			pCall.Seq = 0
-			pCall.Err = errors.New("RpcHandler " + handlerName + "."+serviceMethod+" deep copy inParam is error:" + err.Error())
+			pCall.Err = errors.New("RpcHandler " + handlerName + "." + serviceMethod + " deep copy inParam is error:" + err.Error())
 			pCall.done <- pCall
 			log.SError(pCall.Err.Error())
 
@@ -326,7 +323,7 @@ func (server *Server) selfNodeRpcHandlerGo(processor IRpcProcessor, client *Clie
 
 			v := client.RemovePending(callSeq)
 			if v == nil {
-				log.SError("rpcClient cannot find seq ",callSeq, " in pending")
+				log.SError("rpcClient cannot find seq ", callSeq, " in pending")
 				ReleaseRpcRequest(req)
 				return
 			}
@@ -363,13 +360,13 @@ func (server *Server) selfNodeRpcHandlerAsyncGo(client *Client, callerRpcHandler
 	//args
 	//复制输入参数
 	iParam := inParamValue.Interface()
-	bytes,err := processor.Marshal(args)
+	bytes, err := processor.Marshal(args)
 	if err == nil {
-		err = processor.Unmarshal(bytes,iParam)
+		err = processor.Unmarshal(bytes, iParam)
 	}
 
 	if err != nil {
-		errM := errors.New("RpcHandler " + handlerName + "."+serviceMethod+" deep copy inParam is error:" + err.Error())
+		errM := errors.New("RpcHandler " + handlerName + "." + serviceMethod + " deep copy inParam is error:" + err.Error())
 		log.SError(errM.Error())
 		return errM
 	}

@@ -3,25 +3,25 @@ package network
 import (
 	"crypto/tls"
 	"errors"
-	"github.com/duanhf2012/origin/log"
+	"github.com/study825/originplus/log"
 	"net/http"
 	"time"
 )
 
-var DefaultMaxHeaderBytes int = 1<<20
+var DefaultMaxHeaderBytes int = 1 << 20
 
 type CAFile struct {
 	CertFile string
-	Keyfile string
+	Keyfile  string
 }
 
 type HttpServer struct {
-	listenAddr string
+	listenAddr   string
 	readTimeout  time.Duration
 	writeTimeout time.Duration
 
-	handler      http.Handler
-	caFileList     []CAFile
+	handler    http.Handler
+	caFileList []CAFile
 
 	httpServer *http.Server
 }
@@ -47,7 +47,7 @@ func (slf *HttpServer) startListen() error {
 	for _, caFile := range slf.caFileList {
 		cer, err := tls.LoadX509KeyPair(caFile.CertFile, caFile.Keyfile)
 		if err != nil {
-			log.SFatal("Load CA  [",caFile.CertFile,"]-[",caFile.Keyfile,"] file is fail:",err.Error())
+			log.SFatal("Load CA  [", caFile.CertFile, "]-[", caFile.Keyfile, "] file is fail:", err.Error())
 			return err
 		}
 		tlsCaList = append(tlsCaList, cer)
@@ -74,13 +74,12 @@ func (slf *HttpServer) startListen() error {
 	}
 
 	if err != nil {
-		log.SFatal("Listen for address ",slf.listenAddr," failure:",err.Error())
+		log.SFatal("Listen for address ", slf.listenAddr, " failure:", err.Error())
 		return err
 	}
 
 	return nil
 }
-
 
 func (slf *HttpServer) SetCAFile(caFile []CAFile) {
 	slf.caFileList = caFile

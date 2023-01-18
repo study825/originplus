@@ -2,8 +2,8 @@ package messagequeueservice
 
 import (
 	"errors"
-	"github.com/duanhf2012/origin/log"
-	"github.com/duanhf2012/origin/util/coroutine"
+	"github.com/study825/originplus/log"
+	"github.com/study825/originplus/util/coroutine"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -116,18 +116,18 @@ func (tr *TopicRoom) topicRoomRun() {
 		for retryCount := 0; retryCount < maxTryPersistNum; {
 			//持久化处理
 			stagingBuff, savedBuff, ret := tr.PersistTopicData(tr.topic, stagingBuff, retryCount+1)
-			
+
 			if ret == true {
 				// 1. 把成功存储的数据放入内存中
 				if len(savedBuff) > 0 {
 					tr.PushTopicDataToQueue(tr.topic, savedBuff)
 				}
-				
+
 				// 2. 如果存档成功，并且有后续批次，则继续存档
 				if ret == true && len(stagingBuff) > 0 {
 					continue
 				}
-				
+
 				// 3. 成功了，跳出
 				break
 			} else {

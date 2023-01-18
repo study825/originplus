@@ -2,9 +2,9 @@ package messagequeueservice
 
 import (
 	"fmt"
-	"github.com/duanhf2012/origin/log"
-	"github.com/duanhf2012/origin/service"
-	"github.com/duanhf2012/origin/sysmodule/mongodbmodule"
+	"github.com/study825/originplus/log"
+	"github.com/study825/originplus/service"
+	"github.com/study825/originplus/sysmodule/mongodbmodule"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"sunserver/common/util"
@@ -46,7 +46,7 @@ func (mp *MongoPersist) OnInit() error {
 	keys = append(keys, "Customer", "Topic")
 	IndexKey = append(IndexKey, keys)
 	s := mp.mongo.TakeSession()
-	if err := s.EnsureUniqueIndex(mp.dbName, CustomerCollectName, IndexKey, true, true,true); err != nil {
+	if err := s.EnsureUniqueIndex(mp.dbName, CustomerCollectName, IndexKey, true, true, true); err != nil {
 		log.SError("EnsureUniqueIndex is fail ", err.Error())
 		return err
 	}
@@ -131,7 +131,7 @@ func (mp *MongoPersist) persistTopicData(collectionName string, topicData []Topi
 
 	_, err := s.Collection(mp.dbName, collectionName).InsertMany(ctx, documents)
 	if err != nil {
-		log.SError("PersistTopicData InsertMany fail,collect name is ", collectionName," error:",err.Error())
+		log.SError("PersistTopicData InsertMany fail,collect name is ", collectionName, " error:", err.Error())
 
 		//失败最大重试数量
 		return retryCount >= mp.retryCount
@@ -140,16 +140,16 @@ func (mp *MongoPersist) persistTopicData(collectionName string, topicData []Topi
 	return true
 }
 
-func (mp *MongoPersist) IsSameDay(timestamp1 int64,timestamp2 int64) bool{
+func (mp *MongoPersist) IsSameDay(timestamp1 int64, timestamp2 int64) bool {
 	t1 := time.Unix(timestamp1, 0)
 	t2 := time.Unix(timestamp2, 0)
-	return t1.Year() == t2.Year() && t1.Month() == t2.Month()&&t1.Day() == t2.Day()
+	return t1.Year() == t2.Year() && t1.Month() == t2.Month() && t1.Day() == t2.Day()
 }
 
 // PersistTopicData 持久化数据
 func (mp *MongoPersist) PersistTopicData(topic string, topicData []TopicData, retryCount int) ([]TopicData, []TopicData, bool) {
 	if len(topicData) == 0 {
-		return nil, nil,true
+		return nil, nil, true
 	}
 
 	preDate := topicData[0].Seq >> 32
@@ -157,7 +157,7 @@ func (mp *MongoPersist) PersistTopicData(topic string, topicData []TopicData, re
 	for findPos = 1; findPos < len(topicData); findPos++ {
 		newDate := topicData[findPos].Seq >> 32
 		//说明换天了
-		if mp.IsSameDay(int64(preDate),int64(newDate)) == false {
+		if mp.IsSameDay(int64(preDate), int64(newDate)) == false {
 			break
 		}
 	}
@@ -174,9 +174,8 @@ func (mp *MongoPersist) PersistTopicData(topic string, topicData []TopicData, re
 }
 
 // FindTopicData 查找数据
-func (mp *MongoPersist) findTopicData(topic string, startIndex uint64, limit int64,topicBuff []TopicData) ([]TopicData, bool) {
+func (mp *MongoPersist) findTopicData(topic string, startIndex uint64, limit int64, topicBuff []TopicData) ([]TopicData, bool) {
 	s := mp.mongo.TakeSession()
-
 
 	condition := bson.D{{Key: "_id", Value: bson.D{{Key: "$gt", Value: startIndex}}}}
 
@@ -231,26 +230,26 @@ func (mp *MongoPersist) findTopicData(topic string, startIndex uint64, limit int
 	return topicBuff, true
 }
 
-func (mp *MongoPersist) IsYesterday(startIndex uint64) (bool,string){
-	timeStamp := int64(startIndex>>32)
+func (mp *MongoPersist) IsYesterday(startIndex uint64) (bool, string) {
+	timeStamp := int64(startIndex >> 32)
 
-	startTime := time.Unix(timeStamp, 0).AddDate(0,0,1)
+	startTime := time.Unix(timeStamp, 0).AddDate(0, 0, 1)
 	nowTm := time.Now()
 
-	return startTime.Year() == nowTm.Year() && startTime.Month() == nowTm.Month()&&startTime.Day() == nowTm.Day(),nowTm.Format("20060102")
+	return startTime.Year() == nowTm.Year() && startTime.Month() == nowTm.Month() && startTime.Day() == nowTm.Day(), nowTm.Format("20060102")
 }
 
-func (mp *MongoPersist) getCollectCount(topic string,today string) (int64 ,error){
+func (mp *MongoPersist) getCollectCount(topic string, today string) (int64, error) {
 	s := mp.mongo.TakeSession()
 	ctx, cancel := s.GetDefaultContext()
 	defer cancel()
 	collectName := fmt.Sprintf("%s_%s", topic, today)
 	count, err := s.Collection(mp.dbName, collectName).EstimatedDocumentCount(ctx)
-	return count,err
+	return count, err
 }
 
 // FindTopicData 查找数据
-func (mp *MongoPersist) FindTopicData(topic string, startIndex uint64, limit int64,topicBuff []TopicData) []TopicData {
+func (mp *MongoPersist) FindTopicData(topic string, startIndex uint64, limit int64, topicBuff []TopicData) []TopicData {
 	//某表找不到，一直往前找，找到当前置为止
 	for days := 1; days <= MaxDays; days++ {
 		//是否可以跳天
@@ -259,12 +258,12 @@ func (mp *MongoPersist) FindTopicData(topic string, startIndex uint64, limit int
 		IsJumpDays := true
 
 		//如果是昨天，先判断当天有没有表数据
-		bYesterday,strToday := mp.IsYesterday(startIndex)
-		if  bYesterday {
-			count,err := mp.getCollectCount(topic,strToday)
+		bYesterday, strToday := mp.IsYesterday(startIndex)
+		if bYesterday {
+			count, err := mp.getCollectCount(topic, strToday)
 			if err != nil {
 				//失败时，重新开始
-				log.SError("getCollectCount ",topic,"_",strToday," is fail:",err.Error())
+				log.SError("getCollectCount ", topic, "_", strToday, " is fail:", err.Error())
 				return nil
 			}
 			//当天没有记录，则不能跳表，有可能当天还有数据
@@ -274,7 +273,7 @@ func (mp *MongoPersist) FindTopicData(topic string, startIndex uint64, limit int
 		}
 
 		//从startIndex开始一直往后查
-		topicData, isSucc := mp.findTopicData(topic, startIndex, limit,topicBuff)
+		topicData, isSucc := mp.findTopicData(topic, startIndex, limit, topicBuff)
 		//有数据或者数据库出错时返回，返回后，会进行下一轮的查询遍历
 		if len(topicData) > 0 || isSucc == false {
 			return topicData
