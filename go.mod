@@ -1,4 +1,4 @@
-module github.com/duanhf2012/origin
+module github.com/study825/originplus
 
 go 1.19
 
