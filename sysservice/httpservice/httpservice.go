@@ -2,11 +2,11 @@ package httpservice
 
 import (
 	"fmt"
-	"github.com/duanhf2012/origin/event"
-	"github.com/duanhf2012/origin/network"
-	"github.com/duanhf2012/origin/service"
-	"github.com/duanhf2012/origin/util/uuid"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/study825/originplus/event"
+	"github.com/study825/originplus/network"
+	"github.com/study825/originplus/service"
+	"github.com/study825/originplus/util/uuid"
 	"io"
 	"net/http"
 	"os"
@@ -93,7 +93,7 @@ type HttpService struct {
 	listenAddr     string
 	corsHeader     *CORSHeader
 	processTimeout time.Duration
-	manualStart 	bool
+	manualStart    bool
 }
 
 type HttpFiltrate func(session *HttpSession) bool //true is pass
@@ -118,7 +118,7 @@ func NewHttpHttpRouter() IHttpRouter {
 	return httpRouter
 }
 
-func (slf *HttpSession) GetRawQuery() string{
+func (slf *HttpSession) GetRawQuery() string {
 	return slf.r.URL.RawQuery
 }
 
@@ -370,8 +370,8 @@ func (httpService *HttpService) OnInit() error {
 
 	if manualStart, ok := httpCfg["ManualStart"]; ok == true {
 		httpService.manualStart = manualStart.(bool)
-	}else{
-		manualStart =false
+	} else {
+		manualStart = false
 	}
 
 	httpService.processTimeout = DefaultProcessTimeout

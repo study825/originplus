@@ -1,6 +1,6 @@
 package math
 
-import "github.com/duanhf2012/origin/log"
+import "github.com/study825/originplus/log"
 
 type NumberType interface {
 	int | int8 | int16 | int32 | int64 | float32 | float64 | uint | uint8 | uint16 | uint32 | uint64
@@ -38,13 +38,12 @@ func Abs[NumType SignedNumberType](Num NumType) NumType {
 	return Num
 }
 
-
 func Add[NumType NumberType](number1 NumType, number2 NumType) NumType {
 	ret := number1 + number2
-	if number2> 0 && ret < number1 {
-		log.SStack("Calculation overflow , number1 is ",number1," number2 is ",number2)
-	}else if (number2<0 && ret > number1){
-		log.SStack("Calculation overflow , number1 is ",number1," number2 is ",number2)
+	if number2 > 0 && ret < number1 {
+		log.SStack("Calculation overflow , number1 is ", number1, " number2 is ", number2)
+	} else if number2 < 0 && ret > number1 {
+		log.SStack("Calculation overflow , number1 is ", number1, " number2 is ", number2)
 	}
 
 	return ret
@@ -52,15 +51,14 @@ func Add[NumType NumberType](number1 NumType, number2 NumType) NumType {
 
 func Sub[NumType NumberType](number1 NumType, number2 NumType) NumType {
 	ret := number1 - number2
-	if number2> 0 && ret > number1 {
-		log.SStack("Calculation overflow , number1 is ",number1," number2 is ",number2)
-	}else if (number2<0 && ret < number1){
-		log.SStack("Calculation overflow , number1 is ",number1," number2 is ",number2)
+	if number2 > 0 && ret > number1 {
+		log.SStack("Calculation overflow , number1 is ", number1, " number2 is ", number2)
+	} else if number2 < 0 && ret < number1 {
+		log.SStack("Calculation overflow , number1 is ", number1, " number2 is ", number2)
 	}
 
 	return ret
 }
-
 
 func Mul[NumType NumberType](number1 NumType, number2 NumType) NumType {
 	ret := number1 * number2
@@ -68,11 +66,10 @@ func Mul[NumType NumberType](number1 NumType, number2 NumType) NumType {
 		return ret
 	}
 
-	if ret / number2 == number1 {
+	if ret/number2 == number1 {
 		return ret
 	}
-	
-	log.SStack("Calculation overflow , number1 is ",number1," number2 is ",number2)
+
+	log.SStack("Calculation overflow , number1 is ", number1, " number2 is ", number2)
 	return ret
 }
-

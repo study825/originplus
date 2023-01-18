@@ -1,13 +1,13 @@
 package mongomodule
 
 import (
-	"github.com/duanhf2012/origin/log"
+	"container/heap"
+	"github.com/study825/originplus/log"
 	"gopkg.in/mgo.v2"
+	_ "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"sync"
 	"time"
-	"container/heap"
-	_ "gopkg.in/mgo.v2"
 )
 
 // session
@@ -55,14 +55,14 @@ type MongoModule struct {
 	dailContext *DialContext
 }
 
-func (slf *MongoModule) Init(url string,sessionNum uint32,dialTimeout time.Duration, timeout time.Duration) error {
+func (slf *MongoModule) Init(url string, sessionNum uint32, dialTimeout time.Duration, timeout time.Duration) error {
 	var err error
 	slf.dailContext, err = dialWithTimeout(url, sessionNum, dialTimeout, timeout)
 
 	return err
 }
 
-func (slf *MongoModule) Ref() *Session{
+func (slf *MongoModule) Ref() *Session {
 	return slf.dailContext.Ref()
 }
 
@@ -82,7 +82,7 @@ func dialWithTimeout(url string, sessionNum uint32, dialTimeout time.Duration, t
 		return nil, err
 	}
 
-	s.SetMode(mgo.Strong,true)
+	s.SetMode(mgo.Strong, true)
 	s.SetSyncTimeout(timeout)
 	s.SetSocketTimeout(timeout)
 
@@ -133,7 +133,6 @@ func (c *DialContext) UnRef(s *Session) {
 	c.Unlock()
 }
 
-
 // goroutine safe
 func (s *Session) EnsureCounter(db string, collection string, id string) error {
 	err := s.DB(db).C(collection).Insert(bson.M{
@@ -163,9 +162,9 @@ func (s *Session) NextSeq(db string, collection string, id string) (int, error) 
 // goroutine safe
 func (s *Session) EnsureIndex(db string, collection string, key []string, bBackground bool) error {
 	return s.DB(db).C(collection).EnsureIndex(mgo.Index{
-		Key:    key,
-		Unique: false,
-		Sparse: true,
+		Key:        key,
+		Unique:     false,
+		Sparse:     true,
 		Background: bBackground,
 	})
 }
@@ -173,9 +172,9 @@ func (s *Session) EnsureIndex(db string, collection string, key []string, bBackg
 // goroutine safe
 func (s *Session) EnsureUniqueIndex(db string, collection string, key []string, bBackground bool) error {
 	return s.DB(db).C(collection).EnsureIndex(mgo.Index{
-		Key:    key,
-		Unique: true,
-		Sparse: true,
+		Key:        key,
+		Unique:     true,
+		Sparse:     true,
 		Background: bBackground,
 	})
 }

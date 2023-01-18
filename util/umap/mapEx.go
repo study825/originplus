@@ -2,7 +2,7 @@ package umap
 
 import (
 	"fmt"
-	"github.com/duanhf2012/origin/util/hash"
+	"github.com/study825/originplus/util/hash"
 	"sync"
 	"sync/atomic"
 )
@@ -16,7 +16,7 @@ type MapEx struct {
 	m          []map[interface{}]interface{}
 	l          []sync.RWMutex
 	hashMapNum int
-	rangeIdx uint32
+	rangeIdx   uint32
 }
 
 func (m *MapEx) Init(hashMapNum int) {
@@ -37,9 +37,8 @@ func NewMapEx() *MapEx {
 	return &mapEx
 }
 
-
 func (m *MapEx) NextRLockRange(f func(key interface{}, value interface{})) {
-	i := atomic.AddUint32(&m.rangeIdx,1)%uint32(m.hashMapNum)
+	i := atomic.AddUint32(&m.rangeIdx, 1) % uint32(m.hashMapNum)
 
 	m.l[i].RLock()
 	for key, val := range m.m[i] {
@@ -48,7 +47,6 @@ func (m *MapEx) NextRLockRange(f func(key interface{}, value interface{})) {
 
 	m.l[i].RUnlock()
 }
-
 
 func (m *MapEx) ClearMap() {
 	for i := 0; i < DEFAULT_SAFE_MAP_MAX_HASH_NUM; i++ {
@@ -63,7 +61,7 @@ func (m *MapEx) GetHashCode(key interface{}) int {
 }
 
 func (m *MapEx) GetArrayIdByKey(key interface{}) int {
-	if m.hashMapNum ==0 {
+	if m.hashMapNum == 0 {
 		return -1
 	}
 	idx := m.GetHashCode(key) % m.hashMapNum
@@ -213,12 +211,12 @@ func (m *MapEx) LockSet(key interface{}, f func(value interface{}) interface{}) 
 	if ok == false {
 		ret := f(nil)
 		if ret != nil {
-			val[key] =ret
+			val[key] = ret
 		}
 	} else {
 		ret := f(ret)
 		if ret != nil {
-			val[key] =ret
+			val[key] = ret
 		}
 	}
 

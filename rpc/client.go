@@ -4,8 +4,8 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
-	"github.com/duanhf2012/origin/log"
-	"github.com/duanhf2012/origin/network"
+	"github.com/study825/originplus/log"
+	"github.com/study825/originplus/network"
 	"math"
 	"reflect"
 	"runtime"
@@ -33,7 +33,8 @@ type Client struct {
 
 const MaxCheckCallRpcCount = 1000
 const MaxPendingWriteNum = 200000
-const ConnectInterval = 2*time.Second
+const ConnectInterval = 2 * time.Second
+
 var clientSeq uint32
 
 func (client *Client) NewClientAgent(conn *network.TCPConn) network.Agent {
@@ -42,7 +43,6 @@ func (client *Client) NewClientAgent(conn *network.TCPConn) network.Agent {
 
 	return client
 }
-
 
 func (client *Client) Connect(id int, addr string, maxRpcParamLen uint32) error {
 	client.clientSeq = atomic.AddUint32(&clientSeq, 1)
@@ -164,7 +164,7 @@ func (client *Client) FindPending(seq uint64) *Call {
 	if seq == 0 {
 		return nil
 	}
-	
+
 	client.pendingLock.Lock()
 	v, ok := client.pending[seq]
 	if ok == false {
@@ -347,7 +347,7 @@ func (client *Client) Close(waitDone bool) {
 	client.TCPClient.Close(waitDone)
 
 	client.pendingLock.Lock()
-	for  {
+	for {
 		pElem := client.pendingTimer.Front()
 		if pElem == nil {
 			break

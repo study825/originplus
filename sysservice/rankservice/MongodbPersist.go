@@ -2,11 +2,11 @@ package rankservice
 
 import (
 	"fmt"
-	"github.com/duanhf2012/origin/log"
-	"github.com/duanhf2012/origin/rpc"
-	"github.com/duanhf2012/origin/service"
-	"github.com/duanhf2012/origin/sysmodule/mongodbmodule"
-	"github.com/duanhf2012/origin/util/coroutine"
+	"github.com/study825/originplus/log"
+	"github.com/study825/originplus/rpc"
+	"github.com/study825/originplus/service"
+	"github.com/study825/originplus/sysmodule/mongodbmodule"
+	"github.com/study825/originplus/util/coroutine"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"sync"
@@ -14,14 +14,14 @@ import (
 	"time"
 )
 
-const batchRemoveNum  = 128  //一切删除的最大数量
+const batchRemoveNum = 128 //一切删除的最大数量
 
 // RankDataDB 排行表数据
 type RankDataDB struct {
-	Id                 uint64                      `bson:"_id,omitempty"`
-	RefreshTime        int64                       `bson:"RefreshTime,omitempty"`
-	SortData             []int64  				   `bson:"SortData,omitempty"`
-	Data                 []byte   				   `bson:"Data,omitempty"`
+	Id          uint64  `bson:"_id,omitempty"`
+	RefreshTime int64   `bson:"RefreshTime,omitempty"`
+	SortData    []int64 `bson:"SortData,omitempty"`
+	Data        []byte  `bson:"Data,omitempty"`
 }
 
 // MongoPersist持久化Module
@@ -29,21 +29,21 @@ type MongoPersist struct {
 	service.Module
 	mongo mongodbmodule.MongoModule
 
-	url        string //Mongodb连接url
-	dbName     string //数据库名称
-	SaveInterval time.Duration    //落地数据库时间间隔
+	url          string        //Mongodb连接url
+	dbName       string        //数据库名称
+	SaveInterval time.Duration //落地数据库时间间隔
 
 	sync.Mutex
 	mapRemoveRankData map[uint64]map[uint64]struct{} //将要删除的排行数据 map[RankId]map[Key]struct{}
 	mapUpsertRankData map[uint64]map[uint64]RankData //需要upsert的排行数据 map[RankId][key]RankData
 
-	mapRankSkip map[uint64]IRankSkip  //所有的排行榜对象map[RankId]IRankSkip
-	maxRetrySaveCount int  			  //存档重试次数
-	retryTimeIntervalMs time.Duration //重试时间间隔
+	mapRankSkip         map[uint64]IRankSkip //所有的排行榜对象map[RankId]IRankSkip
+	maxRetrySaveCount   int                  //存档重试次数
+	retryTimeIntervalMs time.Duration        //重试时间间隔
 
-	lastSaveTime time.Time  //最后一次存档时间
+	lastSaveTime time.Time //最后一次存档时间
 
-	stop int32 //是否停服
+	stop      int32          //是否停服
 	waitGroup sync.WaitGroup //等待停服
 }
 
@@ -70,7 +70,7 @@ func (mp *MongoPersist) OnInit() error {
 	}
 
 	//开启协程
-	coroutine.GoRecover(mp.persistCoroutine,-1)
+	coroutine.GoRecover(mp.persistCoroutine, -1)
 	return nil
 }
 
@@ -81,12 +81,12 @@ func (mp *MongoPersist) ReadCfg() error {
 	}
 
 	//读取数据库配置
-	saveMongoCfg,ok := mapDBServiceCfg["SaveMongo"]
+	saveMongoCfg, ok := mapDBServiceCfg["SaveMongo"]
 	if ok == false {
 		return fmt.Errorf("RankService.SaveMongo config is error")
 	}
 
-	mongodbCfg,ok := saveMongoCfg.(map[string]interface{})
+	mongodbCfg, ok := saveMongoCfg.(map[string]interface{})
 	if ok == false {
 		return fmt.Errorf("RankService.SaveMongo config is error")
 	}
@@ -108,7 +108,7 @@ func (mp *MongoPersist) ReadCfg() error {
 		return fmt.Errorf("RankService.SaveMongo.SaveIntervalMs config is error")
 	}
 
-	mp.SaveInterval = time.Duration(saveInterval.(float64))*time.Millisecond
+	mp.SaveInterval = time.Duration(saveInterval.(float64)) * time.Millisecond
 
 	maxRetrySaveCount, ok := mongodbCfg["MaxRetrySaveCount"]
 	if ok == false {
@@ -120,7 +120,7 @@ func (mp *MongoPersist) ReadCfg() error {
 	if ok == false {
 		return fmt.Errorf("RankService.SaveMongo.RetryTimeIntervalMs config is error")
 	}
-	mp.retryTimeIntervalMs = time.Duration(retryTimeIntervalMs.(float64))*time.Millisecond
+	mp.retryTimeIntervalMs = time.Duration(retryTimeIntervalMs.(float64)) * time.Millisecond
 
 	return nil
 }
@@ -129,7 +129,7 @@ func (mp *MongoPersist) ReadCfg() error {
 func (mp *MongoPersist) OnStart() {
 }
 
-func (mp *MongoPersist)  OnSetupRank(manual bool,rankSkip *RankSkip) error{
+func (mp *MongoPersist) OnSetupRank(manual bool, rankSkip *RankSkip) error {
 	if mp.mapRankSkip == nil {
 		mp.mapRankSkip = map[uint64]IRankSkip{}
 	}
@@ -139,17 +139,17 @@ func (mp *MongoPersist)  OnSetupRank(manual bool,rankSkip *RankSkip) error{
 		return nil
 	}
 
-	log.SRelease("start load rank ",rankSkip.GetRankName()," from mongodb.")
-	err := mp.loadFromDB(rankSkip.GetRankID(),rankSkip.GetRankName())
-	if  err != nil {
-		log.SError("load from db is fail :%s",err.Error())
+	log.SRelease("start load rank ", rankSkip.GetRankName(), " from mongodb.")
+	err := mp.loadFromDB(rankSkip.GetRankID(), rankSkip.GetRankName())
+	if err != nil {
+		log.SError("load from db is fail :%s", err.Error())
 		return err
 	}
-	log.SRelease("finish load rank ",rankSkip.GetRankName()," from mongodb.")
+	log.SRelease("finish load rank ", rankSkip.GetRankName(), " from mongodb.")
 	return nil
 }
 
-func (mp *MongoPersist) loadFromDB(rankId uint64,rankCollectName string) error{
+func (mp *MongoPersist) loadFromDB(rankId uint64, rankCollectName string) error {
 	s := mp.mongo.TakeSession()
 	ctx, cancel := s.GetDefaultContext()
 	defer cancel()
@@ -161,7 +161,7 @@ func (mp *MongoPersist) loadFromDB(rankId uint64,rankCollectName string) error{
 		return err
 	}
 
-	if cursor.Err()!=nil {
+	if cursor.Err() != nil {
 		log.SError("find collect name ", rankCollectName, " is error:", cursor.Err().Error())
 		return err
 	}
@@ -188,51 +188,50 @@ func (mp *MongoPersist) loadFromDB(rankId uint64,rankCollectName string) error{
 		rankData.SortData = rankDataDB.SortData
 
 		//更新到排行榜
-		rankSkip.UpsetRank(&rankData,rankDataDB.RefreshTime,true)
+		rankSkip.UpsetRank(&rankData, rankDataDB.RefreshTime, true)
 	}
 
 	return nil
 }
 
-func (mp *MongoPersist) lazyInitRemoveMap(rankId uint64){
+func (mp *MongoPersist) lazyInitRemoveMap(rankId uint64) {
 	if mp.mapRemoveRankData[rankId] == nil {
-		mp.mapRemoveRankData[rankId] = make(map[uint64]struct{},256)
+		mp.mapRemoveRankData[rankId] = make(map[uint64]struct{}, 256)
 	}
 }
 
-func (mp *MongoPersist) lazyInitUpsertMap(rankId uint64){
+func (mp *MongoPersist) lazyInitUpsertMap(rankId uint64) {
 	if mp.mapUpsertRankData[rankId] == nil {
-		mp.mapUpsertRankData[rankId] = make(map[uint64]RankData,256)
+		mp.mapUpsertRankData[rankId] = make(map[uint64]RankData, 256)
 	}
 }
 
-func (mp *MongoPersist) OnEnterRank(rankSkip IRankSkip, enterData *RankData){
+func (mp *MongoPersist) OnEnterRank(rankSkip IRankSkip, enterData *RankData) {
 	mp.Lock()
 	defer mp.Unlock()
 
-	delete(mp.mapRemoveRankData,enterData.Key)
+	delete(mp.mapRemoveRankData, enterData.Key)
 
 	mp.lazyInitUpsertMap(rankSkip.GetRankID())
 	mp.mapUpsertRankData[rankSkip.GetRankID()][enterData.Key] = *enterData
 }
 
-
-func (mp *MongoPersist) OnLeaveRank(rankSkip IRankSkip, leaveData *RankData){
+func (mp *MongoPersist) OnLeaveRank(rankSkip IRankSkip, leaveData *RankData) {
 	mp.Lock()
 	defer mp.Unlock()
 
 	//先删掉更新中的数据
-	delete(mp.mapUpsertRankData,leaveData.Key)
+	delete(mp.mapUpsertRankData, leaveData.Key)
 	mp.lazyInitRemoveMap(rankSkip.GetRankID())
 	mp.mapRemoveRankData[rankSkip.GetRankID()][leaveData.Key] = struct{}{}
 }
 
-func (mp *MongoPersist) OnChangeRankData(rankSkip IRankSkip, changeData *RankData){
+func (mp *MongoPersist) OnChangeRankData(rankSkip IRankSkip, changeData *RankData) {
 	mp.Lock()
 	defer mp.Unlock()
 
 	//先删掉要删除的数据
-	delete(mp.mapRemoveRankData,changeData.Key)
+	delete(mp.mapRemoveRankData, changeData.Key)
 
 	//更新数据
 	mp.lazyInitUpsertMap(rankSkip.GetRankID())
@@ -240,12 +239,12 @@ func (mp *MongoPersist) OnChangeRankData(rankSkip IRankSkip, changeData *RankDat
 }
 
 //停存持久化到DB
-func (mp *MongoPersist) OnStop(mapRankSkip map[uint64]*RankSkip){
-	atomic.StoreInt32(&mp.stop,1)
+func (mp *MongoPersist) OnStop(mapRankSkip map[uint64]*RankSkip) {
+	atomic.StoreInt32(&mp.stop, 1)
 	mp.waitGroup.Wait()
 }
 
-func (mp *MongoPersist) JugeTimeoutSave() bool{
+func (mp *MongoPersist) JugeTimeoutSave() bool {
 	timeout := time.Now()
 	isTimeOut := timeout.Sub(mp.lastSaveTime) >= mp.SaveInterval
 	if isTimeOut == true {
@@ -255,19 +254,19 @@ func (mp *MongoPersist) JugeTimeoutSave() bool{
 	return isTimeOut
 }
 
-func (mp *MongoPersist)  persistCoroutine(){
+func (mp *MongoPersist) persistCoroutine() {
 	mp.waitGroup.Add(1)
 	defer mp.waitGroup.Done()
-	for atomic.LoadInt32(&mp.stop)==0 || mp.hasPersistData(){
+	for atomic.LoadInt32(&mp.stop) == 0 || mp.hasPersistData() {
 		//间隔时间sleep
-		time.Sleep(time.Second*1)
+		time.Sleep(time.Second * 1)
 
 		//没有持久化数据continue
 		if mp.hasPersistData() == false {
 			continue
 		}
 
-		if mp.JugeTimeoutSave() == false{
+		if mp.JugeTimeoutSave() == false {
 			continue
 		}
 
@@ -279,14 +278,14 @@ func (mp *MongoPersist)  persistCoroutine(){
 	mp.saveToDB()
 }
 
-func (mp *MongoPersist) hasPersistData() bool{
+func (mp *MongoPersist) hasPersistData() bool {
 	mp.Lock()
 	defer mp.Unlock()
 
-	return len(mp.mapUpsertRankData)>0 || len(mp.mapRemoveRankData) >0
+	return len(mp.mapUpsertRankData) > 0 || len(mp.mapRemoveRankData) > 0
 }
 
-func (mp *MongoPersist) saveToDB(){
+func (mp *MongoPersist) saveToDB() {
 	//1.copy数据
 	mp.Lock()
 	mapRemoveRankData := mp.mapRemoveRankData
@@ -300,13 +299,13 @@ func (mp *MongoPersist) saveToDB(){
 		mp.upsertRankDataToDB(mapUpsertRankData)
 	}
 
-	for len(mapRemoveRankData) >0 {
+	for len(mapRemoveRankData) > 0 {
 		mp.removeRankDataToDB(mapRemoveRankData)
 	}
 
 }
 
-func (mp *MongoPersist) removeToDB(collectName string,keys []uint64) error{
+func (mp *MongoPersist) removeToDB(collectName string, keys []uint64) error {
 	s := mp.mongo.TakeSession()
 	ctx, cancel := s.GetDefaultContext()
 	defer cancel()
@@ -322,16 +321,16 @@ func (mp *MongoPersist) removeToDB(collectName string,keys []uint64) error{
 	return nil
 }
 
-func (mp *MongoPersist) removeRankData(rankId uint64,keys []uint64) bool {
+func (mp *MongoPersist) removeRankData(rankId uint64, keys []uint64) bool {
 	rank := mp.mapRankSkip[rankId]
-	if rank== nil {
-		log.SError("cannot find rankId ",rankId,"config")
+	if rank == nil {
+		log.SError("cannot find rankId ", rankId, "config")
 		return false
 	}
 
 	//不成功则重试maxRetrySaveCount次
-	for i:=0;i<mp.maxRetrySaveCount;i++{
-		if mp.removeToDB(rank.GetRankName(),keys)!= nil {
+	for i := 0; i < mp.maxRetrySaveCount; i++ {
+		if mp.removeToDB(rank.GetRankName(), keys) != nil {
 			time.Sleep(mp.retryTimeIntervalMs)
 			continue
 		}
@@ -341,9 +340,9 @@ func (mp *MongoPersist) removeRankData(rankId uint64,keys []uint64) bool {
 	return true
 }
 
-func (mp *MongoPersist) upsertToDB(collectName string,rankData *RankData) error{
+func (mp *MongoPersist) upsertToDB(collectName string, rankData *RankData) error {
 	condition := bson.D{{"_id", rankData.Key}}
-	upsert := bson.M{"_id":rankData.Key,"RefreshTime": rankData.refreshTimestamp, "SortData": rankData.SortData, "Data": rankData.Data}
+	upsert := bson.M{"_id": rankData.Key, "RefreshTime": rankData.refreshTimestamp, "SortData": rankData.SortData, "Data": rankData.Data}
 	update := bson.M{"$set": upsert}
 
 	s := mp.mongo.TakeSession()
@@ -351,7 +350,7 @@ func (mp *MongoPersist) upsertToDB(collectName string,rankData *RankData) error{
 	defer cancel()
 
 	updateOpts := options.Update().SetUpsert(true)
-	_, err := s.Collection(mp.dbName, collectName).UpdateOne(ctx, condition,update,updateOpts)
+	_, err := s.Collection(mp.dbName, collectName).UpdateOne(ctx, condition, update, updateOpts)
 	if err != nil {
 		log.SError("MongoPersist upsertDB fail,collect name is ", collectName)
 		return err
@@ -360,19 +359,19 @@ func (mp *MongoPersist) upsertToDB(collectName string,rankData *RankData) error{
 	return nil
 }
 
-func (mp *MongoPersist) upsertRankDataToDB(mapUpsertRankData map[uint64]map[uint64]RankData) error{
-	for rankId,mapRankData := range  mapUpsertRankData{
-		rank,ok := mp.mapRankSkip[rankId]
+func (mp *MongoPersist) upsertRankDataToDB(mapUpsertRankData map[uint64]map[uint64]RankData) error {
+	for rankId, mapRankData := range mapUpsertRankData {
+		rank, ok := mp.mapRankSkip[rankId]
 		if ok == false {
-			log.SError("cannot find rankId ",rankId,",config is error")
-			delete(mapUpsertRankData,rankId)
+			log.SError("cannot find rankId ", rankId, ",config is error")
+			delete(mapUpsertRankData, rankId)
 			continue
 		}
 
-		for key,rankData := range mapRankData{
+		for key, rankData := range mapRankData {
 			//最大重试mp.maxRetrySaveCount次
-			for i:=0;i<mp.maxRetrySaveCount;i++{
-				err := mp.upsertToDB(rank.GetRankName(),&rankData)
+			for i := 0; i < mp.maxRetrySaveCount; i++ {
+				err := mp.upsertToDB(rank.GetRankName(), &rankData)
 				if err != nil {
 					time.Sleep(mp.retryTimeIntervalMs)
 					continue
@@ -381,11 +380,11 @@ func (mp *MongoPersist) upsertRankDataToDB(mapUpsertRankData map[uint64]map[uint
 			}
 
 			//存完删掉指定key
-			delete(mapRankData,key)
+			delete(mapRankData, key)
 		}
 
 		if len(mapRankData) == 0 {
-			delete(mapUpsertRankData,rankId)
+			delete(mapUpsertRankData, rankId)
 		}
 	}
 
@@ -393,23 +392,23 @@ func (mp *MongoPersist) upsertRankDataToDB(mapUpsertRankData map[uint64]map[uint
 }
 
 func (mp *MongoPersist) removeRankDataToDB(mapRemoveRankData map[uint64]map[uint64]struct{}) {
-	for rankId ,mapRemoveKey := range  mapRemoveRankData{
+	for rankId, mapRemoveKey := range mapRemoveRankData {
 		//每100个一删
-		keyList := make([]uint64,0,batchRemoveNum)
-		 for key := range mapRemoveKey {
-			 delete(mapRemoveKey,key)
-			 keyList = append(keyList,key)
-			 if len(keyList) >= batchRemoveNum {
-				 break
-			 }
-		 }
+		keyList := make([]uint64, 0, batchRemoveNum)
+		for key := range mapRemoveKey {
+			delete(mapRemoveKey, key)
+			keyList = append(keyList, key)
+			if len(keyList) >= batchRemoveNum {
+				break
+			}
+		}
 
-		mp.removeRankData(rankId,keyList)
+		mp.removeRankData(rankId, keyList)
 
-		 //如果删完，删掉rankid下所有
-		 if len(mapRemoveKey) == 0 {
-			 delete(mapRemoveRankData,rankId)
-		 }
+		//如果删完，删掉rankid下所有
+		if len(mapRemoveKey) == 0 {
+			delete(mapRemoveRankData, rankId)
+		}
 	}
 
 }

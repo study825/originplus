@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/duanhf2012/origin/log"
+	"github.com/study825/originplus/log"
 	"net/url"
 	"reflect"
 	"strconv"
@@ -12,15 +12,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/duanhf2012/origin/service"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/study825/originplus/service"
 )
 
 type SyncFun func()
 
 type DBExecute struct {
-	syncExecuteFun   chan SyncFun
-	syncExecuteExit  chan bool
+	syncExecuteFun  chan SyncFun
+	syncExecuteExit chan bool
 }
 
 type PingExecute struct {
@@ -31,19 +31,19 @@ type PingExecute struct {
 // DBModule ...
 type MySQLModule struct {
 	service.Module
-	db               *sql.DB
-	url              string
-	username         string
-	password         string
-	dbname           string
-	slowDuration        time.Duration
-	pingCoroutine 	 PingExecute
-	waitGroup    	 sync.WaitGroup
+	db            *sql.DB
+	url           string
+	username      string
+	password      string
+	dbname        string
+	slowDuration  time.Duration
+	pingCoroutine PingExecute
+	waitGroup     sync.WaitGroup
 }
 
 // Tx ...
 type Tx struct {
-	tx        *sql.Tx
+	tx           *sql.Tx
 	slowDuration time.Duration
 }
 
@@ -63,19 +63,17 @@ type DataSetList struct {
 	blur              bool
 }
 
-
 type dbControl interface {
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 }
 
-
-func (m *MySQLModule) Init( url string, userName string, password string, dbname string,maxConn int) error {
+func (m *MySQLModule) Init(url string, userName string, password string, dbname string, maxConn int) error {
 	m.url = url
 	m.username = userName
 	m.password = password
 	m.dbname = dbname
-	m.pingCoroutine = PingExecute{tickerPing : time.NewTicker(5*time.Second), pintExit : make(chan bool, 1)}
+	m.pingCoroutine = PingExecute{tickerPing: time.NewTicker(5 * time.Second), pintExit: make(chan bool, 1)}
 
 	return m.connect(maxConn)
 }
@@ -85,12 +83,12 @@ func (m *MySQLModule) SetQuerySlowTime(slowDuration time.Duration) {
 }
 
 func (m *MySQLModule) Query(strQuery string, args ...interface{}) (*DataSetList, error) {
-	return query(m.slowDuration, m.db,strQuery,args...)
+	return query(m.slowDuration, m.db, strQuery, args...)
 }
 
 // Exec ...
 func (m *MySQLModule) Exec(strSql string, args ...interface{}) (*DBResult, error) {
-	return exec(m.slowDuration, m.db,strSql,args...)
+	return exec(m.slowDuration, m.db, strSql, args...)
 }
 
 // Begin starts a transaction.
@@ -118,12 +116,12 @@ func (slf *Tx) Commit() error {
 
 // QueryEx executes a query that return rows.
 func (slf *Tx) Query(strQuery string, args ...interface{}) (*DataSetList, error) {
-	return query(slf.slowDuration,slf.tx,strQuery,args...)
+	return query(slf.slowDuration, slf.tx, strQuery, args...)
 }
 
 // Exec executes a query that doesn't return rows.
 func (slf *Tx) Exec(strSql string, args ...interface{}) (*DBResult, error) {
-	return exec(slf.slowDuration,slf.tx,strSql,args...)
+	return exec(slf.slowDuration, slf.tx, strSql, args...)
 }
 
 // Connect ...
@@ -168,7 +166,7 @@ func (m *MySQLModule) runPing() {
 	}
 }
 
-func  checkArgs(args ...interface{}) error {
+func checkArgs(args ...interface{}) error {
 	for _, val := range args {
 		if reflect.TypeOf(val).Kind() == reflect.String {
 			retVal := val.(string)
@@ -211,14 +209,14 @@ func  checkArgs(args ...interface{}) error {
 	return nil
 }
 
-func checkSlow(slowDuration time.Duration,Time time.Duration) bool {
-	if slowDuration != 0 && Time >=slowDuration {
+func checkSlow(slowDuration time.Duration, Time time.Duration) bool {
+	if slowDuration != 0 && Time >= slowDuration {
 		return true
 	}
 	return false
 }
 
-func query(slowDuration time.Duration,db dbControl,strQuery string, args ...interface{}) (*DataSetList, error) {
+func query(slowDuration time.Duration, db dbControl, strQuery string, args ...interface{}) (*DataSetList, error) {
 	datasetList := DataSetList{}
 	datasetList.tag = "json"
 	datasetList.blur = true
@@ -237,7 +235,7 @@ func query(slowDuration time.Duration,db dbControl,strQuery string, args ...inte
 	rows, err := db.Query(strQuery, args...)
 	timeFuncPass := time.Since(TimeFuncStart)
 
-	if checkSlow(slowDuration,timeFuncPass) {
+	if checkSlow(slowDuration, timeFuncPass) {
 		log.Error("DBModule QueryEx Time %s , Query :%s , args :%+v", timeFuncPass, strQuery, args)
 	}
 	if err != nil {
@@ -282,7 +280,7 @@ func query(slowDuration time.Duration,db dbControl,strQuery string, args ...inte
 
 		if hasRet == false {
 			if rows.Err() != nil {
-				log.Error( "Query:%s(%+v)", strQuery, rows)
+				log.Error("Query:%s(%+v)", strQuery, rows)
 			}
 			break
 		}
@@ -291,7 +289,7 @@ func query(slowDuration time.Duration,db dbControl,strQuery string, args ...inte
 	return &datasetList, nil
 }
 
-func exec(slowDuration time.Duration,db dbControl,strSql string, args ...interface{}) (*DBResult, error) {
+func exec(slowDuration time.Duration, db dbControl, strSql string, args ...interface{}) (*DBResult, error) {
 	ret := &DBResult{}
 	if db == nil {
 		log.Error("cannot connect database:%s", strSql)
@@ -306,7 +304,7 @@ func exec(slowDuration time.Duration,db dbControl,strSql string, args ...interfa
 	TimeFuncStart := time.Now()
 	res, err := db.Exec(strSql, args...)
 	timeFuncPass := time.Since(TimeFuncStart)
-	if checkSlow(slowDuration,timeFuncPass) {
+	if checkSlow(slowDuration, timeFuncPass) {
 		log.Error("DBModule QueryEx Time %s , Query :%s , args :%+v", timeFuncPass, strSql, args)
 	}
 	if err != nil {

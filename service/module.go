@@ -6,10 +6,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/duanhf2012/origin/event"
-	"github.com/duanhf2012/origin/log"
-	rpcHandle "github.com/duanhf2012/origin/rpc"
-	"github.com/duanhf2012/origin/util/timer"
+	"github.com/study825/originplus/event"
+	"github.com/study825/originplus/log"
+	rpcHandle "github.com/study825/originplus/rpc"
+	"github.com/study825/originplus/util/timer"
 )
 
 const InitModuleId = 1e9

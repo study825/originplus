@@ -2,9 +2,9 @@ package cluster
 
 import (
 	"fmt"
-	"github.com/duanhf2012/origin/log"
-	"github.com/duanhf2012/origin/rpc"
-	"github.com/duanhf2012/origin/service"
+	"github.com/study825/originplus/log"
+	"github.com/study825/originplus/rpc"
+	"github.com/study825/originplus/service"
 	"strings"
 	"sync"
 )
@@ -48,15 +48,14 @@ type Cluster struct {
 	localServiceCfg  map[string]interface{} //map[serviceName]配置数据*
 	serviceDiscovery IServiceDiscovery      //服务发现接口
 
-
 	locker         sync.RWMutex                //结点与服务关系保护锁
-	mapRpc           map[int]NodeRpcInfo    //nodeId
+	mapRpc         map[int]NodeRpcInfo         //nodeId
 	mapIdNode      map[int]NodeInfo            //map[NodeId]NodeInfo
 	mapServiceNode map[string]map[int]struct{} //map[serviceName]map[NodeId]
 
-	rpcServer                rpc.Server
-	rpcEventLocker           sync.RWMutex        //Rpc事件监听保护锁
-	mapServiceListenRpcEvent map[string]struct{} //ServiceName
+	rpcServer                      rpc.Server
+	rpcEventLocker                 sync.RWMutex        //Rpc事件监听保护锁
+	mapServiceListenRpcEvent       map[string]struct{} //ServiceName
 	mapServiceListenDiscoveryEvent map[string]struct{} //ServiceName
 }
 
@@ -383,7 +382,6 @@ func (cls *Cluster) triggerRpcEvent(bConnect bool, clientSeq uint32, nodeId int)
 	}
 }
 
-
 func (cls *Cluster) TriggerDiscoveryEvent(bDiscovery bool, nodeId int, serviceName []string) {
 	cls.rpcEventLocker.Lock()
 	defer cls.rpcEventLocker.Unlock()
@@ -424,7 +422,6 @@ func (cls *Cluster) UnRegRpcEvent(serviceName string) {
 	cls.rpcEventLocker.Unlock()
 }
 
-
 func (cls *Cluster) RegDiscoveryEvent(serviceName string) {
 	cls.rpcEventLocker.Lock()
 	if cls.mapServiceListenDiscoveryEvent == nil {
@@ -440,8 +437,6 @@ func (cls *Cluster) UnReDiscoveryEvent(serviceName string) {
 	delete(cls.mapServiceListenDiscoveryEvent, serviceName)
 	cls.rpcEventLocker.Unlock()
 }
-
-
 
 func HasService(nodeId int, serviceName string) bool {
 	cluster.locker.RLock()
@@ -466,7 +461,7 @@ func GetNodeByServiceName(serviceName string) map[int]struct{} {
 	}
 
 	mapNodeId := map[int]struct{}{}
-	for nodeId,_ := range mapNode {
+	for nodeId, _ := range mapNode {
 		mapNodeId[nodeId] = struct{}{}
 	}
 
@@ -477,11 +472,10 @@ func (cls *Cluster) GetGlobalCfg() interface{} {
 	return cls.globalCfg
 }
 
-
-func (cls *Cluster) GetNodeInfo(nodeId int) (NodeInfo,bool) {
+func (cls *Cluster) GetNodeInfo(nodeId int) (NodeInfo, bool) {
 	cls.locker.RLock()
 	defer cls.locker.RUnlock()
 
-	nodeInfo,ok:= cls.mapIdNode[nodeId]
+	nodeInfo, ok := cls.mapIdNode[nodeId]
 	return nodeInfo,ok
 }

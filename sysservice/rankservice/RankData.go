@@ -1,9 +1,9 @@
 package rankservice
 
 import (
-	"github.com/duanhf2012/origin/rpc"
-	"github.com/duanhf2012/origin/util/algorithms/skip"
-	"github.com/duanhf2012/origin/util/sync"
+	"github.com/study825/originplus/rpc"
+	"github.com/study825/originplus/util/algorithms/skip"
+	"github.com/study825/originplus/util/sync"
 )
 
 var emptyRankData RankData
@@ -21,7 +21,7 @@ type RankData struct {
 	compareFunc func(other skip.Comparator) int
 }
 
-func NewRankData(isDec bool, data *rpc.RankData,refreshTimestamp int64) *RankData {
+func NewRankData(isDec bool, data *rpc.RankData, refreshTimestamp int64) *RankData {
 	ret := RankDataPool.Get().(*RankData)
 	ret.compareFunc = ret.ascCompare
 	if isDec {

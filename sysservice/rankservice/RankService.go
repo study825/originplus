@@ -2,13 +2,14 @@ package rankservice
 
 import (
 	"fmt"
-	"github.com/duanhf2012/origin/log"
-	"github.com/duanhf2012/origin/rpc"
-	"github.com/duanhf2012/origin/service"
+	"github.com/study825/originplus/log"
+	"github.com/study825/originplus/rpc"
+	"github.com/study825/originplus/service"
 	"time"
 )
 
 const PreMapRankSkipLen = 10
+
 type RankService struct {
 	service.Service
 
@@ -61,11 +62,11 @@ func (rs *RankService) RPC_ManualAddRankSkip(addInfo *rpc.AddRankList, addResult
 			continue
 		}
 
-		newSkip := NewRankSkip(addRankListData.RankId,addRankListData.RankName,addRankListData.IsDec, transformLevel(addRankListData.SkipListLevel), addRankListData.MaxRank,time.Duration(addRankListData.ExpireMs)*time.Millisecond)
+		newSkip := NewRankSkip(addRankListData.RankId, addRankListData.RankName, addRankListData.IsDec, transformLevel(addRankListData.SkipListLevel), addRankListData.MaxRank, time.Duration(addRankListData.ExpireMs)*time.Millisecond)
 		newSkip.SetupRankModule(rs.rankModule)
 
 		rs.mapRankSkip[addRankListData.RankId] = newSkip
-		rs.rankModule.OnSetupRank(true,newSkip)
+		rs.rankModule.OnSetupRank(true, newSkip)
 	}
 
 	addResult.AddCount = 1
@@ -139,7 +140,7 @@ func (rs *RankService) RPC_FindRankDataByRank(findInfo *rpc.FindRankDataByRank, 
 func (rs *RankService) RPC_FindRankDataList(findInfo *rpc.FindRankDataList, findResult *rpc.RankDataList) error {
 	rankObj, ok := rs.mapRankSkip[findInfo.RankId]
 	if ok == false || rankObj == nil {
-		err := fmt.Errorf("not config rank %d",findInfo.RankId)
+		err := fmt.Errorf("not config rank %d", findInfo.RankId)
 		log.SError(err.Error())
 		return err
 	}
@@ -151,7 +152,7 @@ func (rs *RankService) RPC_FindRankDataList(findInfo *rpc.FindRankDataList, find
 	}
 
 	//查询附带的key
-	if findInfo.Key!= 0 {
+	if findInfo.Key != 0 {
 		findRankData, rank := rankObj.GetRankNodeData(findInfo.Key)
 		if findRankData != nil {
 			findResult.KeyRank = &rpc.RankPosData{}
@@ -193,12 +194,12 @@ func (rs *RankService) dealCfg() error {
 		}
 
 		rankId, okId := mapCfg["RankID"].(float64)
-		if okId == false || uint64(rankId)==0 {
+		if okId == false || uint64(rankId) == 0 {
 			return fmt.Errorf("RankService SortCfg data must has RankID[number]")
 		}
 
 		rankName, okId := mapCfg["RankName"].(string)
-		if okId == false || len(rankName)==0 {
+		if okId == false || len(rankName) == 0 {
 			return fmt.Errorf("RankService SortCfg data must has RankName[string]")
 		}
 
@@ -207,11 +208,10 @@ func (rs *RankService) dealCfg() error {
 		maxRank, _ := mapCfg["MaxRank"].(float64)
 		expireMs, _ := mapCfg["ExpireMs"].(float64)
 
-
-		newSkip := NewRankSkip(uint64(rankId),rankName,isDec, transformLevel(int32(level)), uint64(maxRank),time.Duration(expireMs)*time.Millisecond)
+		newSkip := NewRankSkip(uint64(rankId), rankName, isDec, transformLevel(int32(level)), uint64(maxRank), time.Duration(expireMs)*time.Millisecond)
 		newSkip.SetupRankModule(rs.rankModule)
 		rs.mapRankSkip[uint64(rankId)] = newSkip
-		err := rs.rankModule.OnSetupRank(false,newSkip)
+		err := rs.rankModule.OnSetupRank(false, newSkip)
 		if err != nil {
 			return err
 		}

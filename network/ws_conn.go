@@ -2,8 +2,8 @@ package network
 
 import (
 	"errors"
-	"github.com/duanhf2012/origin/log"
 	"github.com/gorilla/websocket"
+	"github.com/study825/originplus/log"
 	"net"
 	"sync"
 )
@@ -18,7 +18,7 @@ type WSConn struct {
 	closeFlag bool
 }
 
-func newWSConn(conn *websocket.Conn, pendingWriteNum int, maxMsgLen uint32,messageType int) *WSConn {
+func newWSConn(conn *websocket.Conn, pendingWriteNum int, maxMsgLen uint32, messageType int) *WSConn {
 	wsConn := new(WSConn)
 	wsConn.conn = conn
 	wsConn.writeChan = make(chan []byte, pendingWriteNum)

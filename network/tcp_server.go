@@ -1,34 +1,32 @@
 package network
 
 import (
-	"github.com/duanhf2012/origin/log"
+	"github.com/study825/originplus/log"
 	"net"
 	"sync"
 	"time"
 )
 
-const Default_ReadDeadline  = time.Second*30  //30s
-const Default_WriteDeadline = time.Second*30 //30s
+const Default_ReadDeadline = time.Second * 30  //30s
+const Default_WriteDeadline = time.Second * 30 //30s
 const Default_MaxConnNum = 3000
 const Default_PendingWriteNum = 10000
 const Default_LittleEndian = false
 const Default_MinMsgLen = 2
 const Default_MaxMsgLen = 65535
 
-
 type TCPServer struct {
 	Addr            string
 	MaxConnNum      int
 	PendingWriteNum int
 	ReadDeadline    time.Duration
-	WriteDeadline 	time.Duration
+	WriteDeadline   time.Duration
 	NewAgent        func(*TCPConn) Agent
 	ln              net.Listener
 	conns           ConnSet
 	mutexConns      sync.Mutex
 	wgLn            sync.WaitGroup
 	wgConns         sync.WaitGroup
-
 
 	// msg parser
 	LenMsgLen    int
@@ -71,11 +69,11 @@ func (server *TCPServer) init() {
 
 	if server.WriteDeadline == 0 {
 		server.WriteDeadline = Default_WriteDeadline
-		log.SRelease("invalid WriteDeadline, reset to ", server.WriteDeadline.Seconds(),"s")
+		log.SRelease("invalid WriteDeadline, reset to ", server.WriteDeadline.Seconds(), "s")
 	}
 	if server.ReadDeadline == 0 {
 		server.ReadDeadline = Default_ReadDeadline
-		log.SRelease("invalid ReadDeadline, reset to ", server.ReadDeadline.Seconds(),"s")
+		log.SRelease("invalid ReadDeadline, reset to ", server.ReadDeadline.Seconds(), "s")
 	}
 
 	if server.NewAgent == nil {
@@ -96,11 +94,11 @@ func (server *TCPServer) init() {
 	server.msgParser = msgParser
 }
 
-func (server *TCPServer) SetNetMempool(mempool INetMempool){
+func (server *TCPServer) SetNetMempool(mempool INetMempool) {
 	server.msgParser.INetMempool = mempool
 }
 
-func (server *TCPServer) GetNetMempool() INetMempool{
+func (server *TCPServer) GetNetMempool() INetMempool {
 	return server.msgParser.INetMempool
 }
 
@@ -121,7 +119,7 @@ func (server *TCPServer) run() {
 				if max := 1 * time.Second; tempDelay > max {
 					tempDelay = max
 				}
-				log.SRelease("accept error:",err.Error(),"; retrying in ", tempDelay)
+				log.SRelease("accept error:", err.Error(), "; retrying in ", tempDelay)
 				time.Sleep(tempDelay)
 				continue
 			}
@@ -142,7 +140,7 @@ func (server *TCPServer) run() {
 
 		server.wgConns.Add(1)
 
-		tcpConn := newTCPConn(conn, server.PendingWriteNum, server.msgParser,server.WriteDeadline)
+		tcpConn := newTCPConn(conn, server.PendingWriteNum, server.msgParser, server.WriteDeadline)
 		agent := server.NewAgent(tcpConn)
 		go func() {
 			agent.Run()

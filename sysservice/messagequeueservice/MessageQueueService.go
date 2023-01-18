@@ -3,9 +3,9 @@ package messagequeueservice
 import (
 	"errors"
 	"fmt"
-	"github.com/duanhf2012/origin/log"
-	"github.com/duanhf2012/origin/service"
-	"github.com/duanhf2012/origin/rpc"
+	"github.com/study825/originplus/log"
+	"github.com/study825/originplus/rpc"
+	"github.com/study825/originplus/service"
 	"sync"
 )
 
@@ -13,13 +13,13 @@ type QueueDataPersist interface {
 	service.IModule
 
 	OnExit()
-	OnReceiveTopicData(topic string, topicData []TopicData)                                   //当收到推送过来的数据时
-	OnPushTopicDataToCustomer(topic string, topicData []TopicData)                            //当推送数据到Customer时回调
+	OnReceiveTopicData(topic string, topicData []TopicData)                                                //当收到推送过来的数据时
+	OnPushTopicDataToCustomer(topic string, topicData []TopicData)                                         //当推送数据到Customer时回调
 	PersistTopicData(topic string, topicData []TopicData, retryCount int) ([]TopicData, []TopicData, bool) //持久化数据,失败则返回false，上层会重复尝试，直到成功，建议在函数中加入次数，超过次数则返回true
-	FindTopicData(topic string, startIndex uint64, limit int64, topicBuff []TopicData) []TopicData                   //查找数据,参数bool代表数据库查找是否成功
-	LoadCustomerIndex(topic string, customerId string) (uint64, bool)                         //false时代表获取失败，一般是读取错误，会进行重试。如果不存在时，返回(0,true)
-	GetIndex(topicData *TopicData) uint64                                                     //通过topic数据获取进度索引号
-	PersistIndex(topic string, customerId string, index uint64)                               //持久化进度索引号
+	FindTopicData(topic string, startIndex uint64, limit int64, topicBuff []TopicData) []TopicData         //查找数据,参数bool代表数据库查找是否成功
+	LoadCustomerIndex(topic string, customerId string) (uint64, bool)                                      //false时代表获取失败，一般是读取错误，会进行重试。如果不存在时，返回(0,true)
+	GetIndex(topicData *TopicData) uint64                                                                  //通过topic数据获取进度索引号
+	PersistIndex(topic string, customerId string, index uint64)                                            //持久化进度索引号
 }
 
 type MessageQueueService struct {

@@ -1,11 +1,11 @@
 package network
 
 import (
-	"github.com/duanhf2012/origin/log"
+	"errors"
+	"github.com/study825/originplus/log"
 	"net"
 	"sync"
 	"time"
-	"errors"
 )
 
 type ConnSet map[net.Conn]struct{}
@@ -18,16 +18,16 @@ type TCPConn struct {
 	msgParser *MsgParser
 }
 
-func freeChannel(conn *TCPConn){
-	for;len(conn.writeChan)>0;{
-		byteBuff := <- conn.writeChan
+func freeChannel(conn *TCPConn) {
+	for ; len(conn.writeChan) > 0; {
+		byteBuff := <-conn.writeChan
 		if byteBuff != nil {
 			conn.ReleaseReadMsg(byteBuff)
 		}
 	}
 }
 
-func newTCPConn(conn net.Conn, pendingWriteNum int, msgParser *MsgParser,writeDeadline time.Duration) *TCPConn {
+func newTCPConn(conn net.Conn, pendingWriteNum int, msgParser *MsgParser, writeDeadline time.Duration) *TCPConn {
 	tcpConn := new(TCPConn)
 	tcpConn.conn = conn
 	tcpConn.writeChan = make(chan []byte, pendingWriteNum)
@@ -88,7 +88,7 @@ func (tcpConn *TCPConn) GetRemoteIp() string {
 	return tcpConn.conn.RemoteAddr().String()
 }
 
-func (tcpConn *TCPConn) doWrite(b []byte) error{
+func (tcpConn *TCPConn) doWrite(b []byte) error {
 	if len(tcpConn.writeChan) == cap(tcpConn.writeChan) {
 		tcpConn.ReleaseReadMsg(b)
 		log.SError("close conn: channel full")
@@ -101,7 +101,7 @@ func (tcpConn *TCPConn) doWrite(b []byte) error{
 }
 
 // b must not be modified by the others goroutines
-func (tcpConn *TCPConn) Write(b []byte) error{
+func (tcpConn *TCPConn) Write(b []byte) error {
 	tcpConn.Lock()
 	defer tcpConn.Unlock()
 	if tcpConn.closeFlag || b == nil {
@@ -128,7 +128,7 @@ func (tcpConn *TCPConn) ReadMsg() ([]byte, error) {
 	return tcpConn.msgParser.Read(tcpConn)
 }
 
-func (tcpConn *TCPConn) ReleaseReadMsg(byteBuff []byte){
+func (tcpConn *TCPConn) ReleaseReadMsg(byteBuff []byte) {
 	tcpConn.msgParser.ReleaseByteSlice(byteBuff)
 }
 
@@ -147,15 +147,14 @@ func (tcpConn *TCPConn) WriteRawMsg(args []byte) error {
 	return tcpConn.Write(args)
 }
 
-
 func (tcpConn *TCPConn) IsConnected() bool {
 	return tcpConn.closeFlag == false
 }
 
-func (tcpConn *TCPConn) SetReadDeadline(d time.Duration)  {
+func (tcpConn *TCPConn) SetReadDeadline(d time.Duration) {
 	tcpConn.conn.SetReadDeadline(time.Now().Add(d))
 }
 
-func (tcpConn *TCPConn) SetWriteDeadline(d time.Duration)  {
+func (tcpConn *TCPConn) SetWriteDeadline(d time.Duration) {
 	tcpConn.conn.SetWriteDeadline(time.Now().Add(d))
 }

@@ -1,8 +1,8 @@
 package network
 
 import (
-	"github.com/duanhf2012/origin/log"
 	"github.com/gorilla/websocket"
+	"github.com/study825/originplus/log"
 	"sync"
 	"time"
 )
@@ -14,7 +14,7 @@ type WSClient struct {
 	ConnectInterval  time.Duration
 	PendingWriteNum  int
 	MaxMsgLen        uint32
-	MessageType		 int
+	MessageType      int
 	HandshakeTimeout time.Duration
 	AutoReconnect    bool
 	NewAgent         func(*WSConn) Agent
@@ -22,7 +22,6 @@ type WSClient struct {
 	cons             WebsocketConnSet
 	wg               sync.WaitGroup
 	closeFlag        bool
-
 }
 
 func (client *WSClient) Start() {
@@ -83,7 +82,7 @@ func (client *WSClient) dial() *websocket.Conn {
 			return conn
 		}
 
-		log.SRelease("connect to ", client.Addr," error: ", err.Error())
+		log.SRelease("connect to ", client.Addr, " error: ", err.Error())
 		time.Sleep(client.ConnectInterval)
 		continue
 	}
@@ -108,7 +107,7 @@ reconnect:
 	client.cons[conn] = struct{}{}
 	client.Unlock()
 
-	wsConn := newWSConn(conn, client.PendingWriteNum, client.MaxMsgLen,client.MessageType)
+	wsConn := newWSConn(conn, client.PendingWriteNum, client.MaxMsgLen, client.MessageType)
 	agent := client.NewAgent(wsConn)
 	agent.Run()
 
